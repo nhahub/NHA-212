@@ -3,6 +3,8 @@ import Logo from "../components/logo";
 import Button from "../components/Button";
 import SmartRestaurant from "../components/SmartRestaurant";
 import { Link } from "react-router-dom";
+import userAPI from "../apis/user.api";
+
 
 // prettier-ignore
 const Register = ({backgroundColor = "bg-[linear-gradient(135deg,#f0f2f5_0%,#e0e5ec_100%)]"}) => {
@@ -16,16 +18,28 @@ const Register = ({backgroundColor = "bg-[linear-gradient(135deg,#f0f2f5_0%,#e0e
   const handleSubmit=(e)=>{
 
 e.preventDefault();
-  const formData = {
-    fullName,
-    regEmail,
-    createPassword,
-    confirmPassword,
-    role,
-    termsAccepted,
-  };
+if(createPassword!==confirmPassword){
+  alert("Passwords do not match!");
+  return;
+}
+userAPI.post('/register',{
+  name:fullName,
+  email:regEmail,
+    password:createPassword,
+    role:role
+}).then((res)=>{
+  console.log("Registration successful:", res.data);
 
-  console.log("Form submitted:", formData);
+}).catch((err)=>{
+  console.error("Registration failed:", err);
+});
+
+setFullName("");
+setRegEmail("");
+setCreatePassword("");
+setConfirmPassword("");
+setRole('');
+setTermsAccepted(false);
 
   }
   return (
@@ -41,13 +55,13 @@ e.preventDefault();
             <Logo logoSize="text-[35px]"/>
             <SmartRestaurant textSize="text-[15px]"/>
             <h1 className="text-[25px] font-[600] m-[20px_5px_15px_5px]">
-              Create Your Acounte!
+              Create Your Account!
             </h1>
             <div className=" w-[100%] flex flex-col gap-[5px] justify-center ">
 
               {/* the form creation */}
 
-              <form  onSubmit={handleSubmit} action="" className="flex flex-col gap-[15px] items-center p-[0px_35px]">
+              <form  onSubmit={handleSubmit} className="flex flex-col gap-[15px] items-center p-[0px_35px]">
 
                 <input
                 className="p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" type="text" placeholder="Full Name"
@@ -85,8 +99,7 @@ e.preventDefault();
                        >
                         <option value="" disabled >Select Role</option>
                         <option value="customer">Customer</option>
-                        <option value="supplier">Supplier</option>
-                        <option value="admin">Admin</option>
+                        <option value="owner">owner</option>
                     </select>
 
                       <div className="checkbox-container flex items-center justify-center mt-[5px] mb-[5px]">
@@ -102,7 +115,7 @@ e.preventDefault();
 
 
               {/* prettier-ignore */}
-              <div className="p-[10px]"><span className="pr-[5px]">Already have an account?</span><Link to="" className="font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Login</Link></div>
+              <div className="p-[10px]"><span className="pr-[5px]">Already have an account?</span><Link to="/login" className="font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Login</Link></div>
             </div>
           </div>
 

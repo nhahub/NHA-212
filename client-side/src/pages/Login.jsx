@@ -2,15 +2,35 @@ import React, { useState } from "react";
 import Logo from "../components/logo";
 import Button from "../components/Button";
 import SmartRestaurant from "../components/SmartRestaurant";
-import { Link } from "react-router-dom";
+import { Link  ,useNavigate } from "react-router-dom";
+import userAPI from "../apis/user.api";
 
 // prettier-ignore
 const Login = ({backgroundColor = "bg-[linear-gradient(135deg,#f0f2f5_0%,#e0e5ec_100%)]"}) => {
+  const navigator = useNavigate()
   const[logEmail,setLogEmail]=useState("");
   const[logPassword,setLogPassword]=useState("");
-  
+    const [userRole, setUserRole] = useState('');
   const handleSubmit=(e)=>{
 e.preventDefault();
+userAPI.post('/login',{
+  email:logEmail,
+    password:logPassword
+}).then((res)=>{
+  console.log("Login successful:");
+    const { role } = res.data;
+    setUserRole(role);
+    if (role === 'owner') {
+      navigator('/profile'); // Redirect to owner dashboard
+    } else {
+      navigator('/'); // Redirect to home page for customers
+    }
+}).catch((err)=>{
+  console.error("Login failed:", err);
+});
+setLogEmail("");
+setLogPassword("");
+// navigator('/');
 
   }
   return (
@@ -54,7 +74,7 @@ e.preventDefault();
                 <Link to={''} className="w-auto font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Forgot password?</Link>
               </div>
               {/* prettier-ignore */}
-              <div><span className="pr-[5px]">Don't have an account?</span><Link to="" className="font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Register</Link></div>
+              <div><span className="pr-[5px]">Don't have an account?</span><Link to="/register" className="font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Register</Link></div>
             </div>
           </div>
 
