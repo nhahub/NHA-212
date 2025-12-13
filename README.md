@@ -2,10 +2,10 @@
 
 A restaurant management and food ordering platform that connects customers with restaurants. Built with React and Node.js.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-orange?style=for-the-badge)](https://yumify-plus.vercel.app)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)](https://nodejs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb)](https://www.mongodb.com/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-orange?style=for-the-badge)](https://yumify-plus.vercel.app) 
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](#tech-stack)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)](#tech-stack)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb)](#tech-stack)
 
 ---
 
@@ -582,67 +582,6 @@ The owner dashboard shows:
 
 ---
 
-## Troubleshooting
-
-### CORS Errors
-
-If you see `Access-Control-Allow-Origin` errors in the browser console:
-
-- Make sure `FRONTEND_URL` in your `.env` exactly matches your frontend URL
-- Check the CORS configuration in `server-side/server.js`
-- For local development, make sure the backend allows `http://localhost:5173`
-
-### Can't Connect to MongoDB
-
-If you're getting database connection errors:
-
-- Double-check your `MONGO_URI` in `.env` is correct
-- In MongoDB Atlas, make sure your IP is whitelisted (for development, you can allow all IPs: `0.0.0.0/0`)
-- Verify your MongoDB username and password are correct
-- Make sure you have internet connection
-
-### Environment Variables Not Working
-
-If your environment variables aren't loading:
-
-- Make sure the `.env` file is in the root directory (same level as `package.json`)
-- Restart the server after changing `.env` variables (nodemon should do this automatically, but sometimes you need to restart manually)
-- Check for typos in variable names
-- Make sure there are no spaces around the `=` sign in `.env` (should be `KEY=value`, not `KEY = value`)
-
-### Port Already in Use
-
-If port 5000 or 5173 is already being used:
-
-- For the backend: Change the `PORT` in your `.env` file to something else (like 5001)
-- For the frontend: Edit `client-side/vite.config.js`:
-  ```js
-  export default defineConfig({
-    server: {
-      port: 3000 // or any other available port
-    }
-  })
-  ```
-
-### Emails Not Sending
-
-If verification emails aren't being sent:
-
-- Check that `EMAIL` and `EMAIL_PASS` in `.env` are correct
-- For Gmail, make sure you're using an app-specific password (not your regular password)
-- Check the backend logs for any email-related errors
-- Verify your email service's SMTP settings
-
-### Chatbot Not Working
-
-If the chatbot is giving errors:
-
-- Verify your `GEMINI_API_KEY` in `.env` is correct
-- Check if you've hit the API quota limit on Google AI Studio
-- Make sure the model name matches: `gemini-2.5-flash-lite`
-
----
-
 ## Contributing
 
 I'm open to contributions! Here's how to contribute:
@@ -671,20 +610,14 @@ This is a graduation project. If you want to use it or have questions about lice
 
 ## Contact & Links
 
-- **Live Demo**: [https://yumifyplus.vercel.app](https://yumifyplus.vercel.app)
-- **GitHub Repository**: [Repository URL]
-- **Issues**: [GitHub Issues](https://github.com/yourusername/repo/issues)
-
-### Questions?
-
-If you have questions, suggestions, or need help, feel free to open an issue on GitHub or contact the development team.
+- **Live Demo**: [https://yumif-yplus.vercel.app](https://yumif-yplus.vercel.app)
+- **Issues**: swe.omar.roushdy@gmail.com
 
 ---
 
 <div align="center">
 
 Made with care by the YumifyPlus Team
-
 Star this repo if you found it helpful!
 
 </div>
