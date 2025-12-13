@@ -30,7 +30,8 @@ router.put("/modify", upload.single('logo'), async (req, res) => {
             restaurant.name = name;
         }
         if (req.file) {
-            restaurant.logoUrl = req.file.filename;
+            // Get image URL - works with both Cloudinary and local storage
+            restaurant.logoUrl = req.file.path || req.file.filename;
         }
         await restaurant.save();
         res.status(200).json({ message: "Restaurant details updated successfully", restaurant });

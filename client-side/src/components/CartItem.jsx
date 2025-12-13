@@ -1,5 +1,6 @@
 import { useState } from "react";
 import cartAPI from "../apis/cart.api";
+import { getImageUrl } from "../utils/config";
 
 const CartItem = ({ item, setCart }) => {
 
@@ -11,7 +12,7 @@ const CartItem = ({ item, setCart }) => {
       <div className="flex items-center space-x-4">
         <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center dark:bg-[#0f1724]">
           <img
-            src={`http://localhost:5000/uploads/foods/${item.food?.imageUrl || 'default.jpg'}`}
+            src={getImageUrl(item.food?.imageUrl, 'foods') || "https://placehold.co/64x64?text=Food"}
             alt={item.food?.name || 'Food item'}
             className="w-full h-full object-cover"
           />

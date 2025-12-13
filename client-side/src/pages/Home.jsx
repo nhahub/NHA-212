@@ -5,6 +5,7 @@ import userAPI from "../apis/user.api.js";
 import { Link, useNavigate } from "react-router";
 import cartAPI from "../apis/cart.api.js";
 import toast from "react-hot-toast";
+import { getImageUrl, UPLOADS_BASE_URL } from "../utils/config";
 import {
   Menu,
   ReceiptTextIcon,
@@ -132,6 +133,7 @@ const Home = () => {
             <button
               onClick={() => {
                 userAPI.post("/logout").then(() => {
+                  localStorage.removeItem('authToken'); // Clear token from localStorage
                   navigator("/login");
                 });
               }}
@@ -194,9 +196,7 @@ const Home = () => {
                   className="p-2 w-14 h-14 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
                   <img
-                    src={`http://localhost:5000/uploads/users/${
-                      userData.imageUrl || "default.png"
-                    }`}
+                    src={getImageUrl(userData.imageUrl, 'users') || `${UPLOADS_BASE_URL}/users/default.png`}
                     alt="Profile Pic"
                     className="rounded-full"
                     onError={(e) => {
@@ -225,7 +225,7 @@ const Home = () => {
           <main className="flex-1 p-6">
             {/* Category Tabs */}
             <section className="mb-8">
-              <div className="flex items-center space-x-6 sm:space-x-10 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-4 sm:space-x-6 md:space-x-10 border-b border-gray-200 dark:border-gray-700 overflow-x-auto pb-2 scrollbar-hide">
                 {[
                   "all",
                   "Starter",
@@ -237,7 +237,7 @@ const Home = () => {
                   <span
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500  hover:text-orange-500 transition-colors ${
+                    className={`menu-category-tab font-tabs py-3 text-base sm:text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors whitespace-nowrap flex-shrink-0 ${
                       selectedCategory === cat
                         ? "border-b-2 border-orange-500 text-orange-500 font-bold"
                         : ""
@@ -378,9 +378,7 @@ const Home = () => {
                 >
                   <div className="flex items-center">
                     <img
-                      src={`http://localhost:5000/uploads/foods/${
-                        item.food.imageUrl || "default.jpg"
-                      }`}
+                      src={getImageUrl(item.food.imageUrl, 'foods') || "https://placehold.co/400x300?text=Food+Image"}
                       onError={(e) => {
                         e.target.src = "https://placehold.co/64?text=Food";
                       }}

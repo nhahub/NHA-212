@@ -21,11 +21,14 @@ const router = e.Router();
 
 // Route to register a new user
 router.post("/register", async (req, res) => {
-  const { name, email, password, address, role } = req.body;
+  const { name, email, password, role } = req.body;
+
+  console.log("Registration attempt:", { name, email, role: role || 'not provided' });
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log("Registration failed: User already exists with email:", email);
       return res
         .status(400)
         .json({ message: "User with this email already exists" });
@@ -39,7 +42,6 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      address,
       role,
       isVerified: false,
       verifyToken: token,
@@ -47,6 +49,7 @@ router.post("/register", async (req, res) => {
     });
 
     await newUser.save();
+    console.log("User created successfully:", { userId: newUser._id, email: newUser.email, role: newUser.role });
 
     if (role === "owner") {
       const newRestaurant = new Restaurant({
@@ -58,18 +61,31 @@ router.post("/register", async (req, res) => {
       await newRestaurant.save();
       newUser.restaurant = newRestaurant._id;
       await newUser.save();
+      console.log("Restaurant created for owner:", newRestaurant._id);
     }
 
 
-    const verificationUrl = `http://localhost:5000/api/user/verify/${token}`;
-    await sendEmail(
+    // Use environment variable for base URL, fallback to localhost for development
+    const baseUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.RENDER_SERVICE_NAME || 'yumify-backend'}.onrender.com`
+      : 'http://localhost:5000');
+    const verificationUrl = `${baseUrl}/api/user/verify/${token}`;
+    
+    // Send response immediately, then send email asynchronously (non-blocking)
+    res.status(201).json({ 
+      message: "User registered successfully. Please check your email to verify your account.",
+      email: email // Include email in response for confirmation
+    });
+    
+    // Send verification email asynchronously (don't block the response)
+    sendEmail(
       email,
       "Email Verification",
       `Please verify your email by clicking here : ${verificationUrl}`
-    );
-
-    return res.status(201).json({
-      message: "Registered successfully, verification email sent",
+    ).catch((emailError) => {
+      // Log email error but don't fail the registration
+      console.error("Failed to send verification email to", email, ":", emailError.message);
+      // Optionally, you could store this in a queue to retry later
     });
   } catch (error) {
     console.error("Error in POST /register:", error);
@@ -107,15 +123,197 @@ router.get("/verify/:token", async (req, res) => {
     const user = await User.findOne({ verifyToken: token });
 
     if (!user) {
-      return res.status(404).json({ message: "Invalid verification token" });
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Verification Failed</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 10px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+              text-align: center;
+              max-width: 400px;
+            }
+            .icon {
+              font-size: 64px;
+              margin-bottom: 20px;
+            }
+            h1 {
+              color: #e74c3c;
+              margin-bottom: 10px;
+            }
+            p {
+              color: #666;
+              margin-bottom: 30px;
+            }
+            .btn {
+              display: inline-block;
+              padding: 12px 30px;
+              background: #667eea;
+              color: white;
+              text-decoration: none;
+              border-radius: 5px;
+              transition: background 0.3s;
+            }
+            .btn:hover {
+              background: #5568d3;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">❌</div>
+            <h1>Invalid Token</h1>
+            <p>The verification link is invalid or has already been used.</p>
+            <a href="http://localhost:5174/login" class="btn">Go to Login</a>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     if (user.isVerified) {
-      return res.status(400).json({ message: "Email already verified" });
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Already Verified</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 10px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+              text-align: center;
+              max-width: 400px;
+            }
+            .icon {
+              font-size: 64px;
+              margin-bottom: 20px;
+            }
+            h1 {
+              color: #3498db;
+              margin-bottom: 10px;
+            }
+            p {
+              color: #666;
+              margin-bottom: 30px;
+            }
+            .btn {
+              display: inline-block;
+              padding: 12px 30px;
+              background: #667eea;
+              color: white;
+              text-decoration: none;
+              border-radius: 5px;
+              transition: background 0.3s;
+            }
+            .btn:hover {
+              background: #5568d3;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">ℹ️</div>
+            <h1>Already Verified</h1>
+            <p>Your email has already been verified. You can proceed to login.</p>
+            <a href="http://localhost:5174/login" class="btn">Go to Login</a>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     if (user.verifyTokenExpiry < Date.now()) {
-      return res.status(400).json({ message: "Verification token expired" });
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Token Expired</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .container {
+              background: white;
+              padding: 40px;
+              border-radius: 10px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+              text-align: center;
+              max-width: 400px;
+            }
+            .icon {
+              font-size: 64px;
+              margin-bottom: 20px;
+            }
+            h1 {
+              color: #f39c12;
+              margin-bottom: 10px;
+            }
+            p {
+              color: #666;
+              margin-bottom: 30px;
+            }
+            .btn {
+              display: inline-block;
+              padding: 12px 30px;
+              background: #667eea;
+              color: white;
+              text-decoration: none;
+              border-radius: 5px;
+              transition: background 0.3s;
+              margin: 5px;
+            }
+            .btn:hover {
+              background: #5568d3;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">⏰</div>
+            <h1>Token Expired</h1>
+            <p>Your verification link has expired. Please request a new verification email.</p>
+            <a href="http://localhost:5174/resend-verification" class="btn">Resend Email</a>
+            <a href="http://localhost:5174/login" class="btn">Go to Login</a>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     user.isVerified = true;
@@ -123,10 +321,151 @@ router.get("/verify/:token", async (req, res) => {
     user.verifyTokenExpiry = undefined;
     await user.save();
 
-    return res.status(200).json({ message: "Email verified successfully" });
+    return res.status(200).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Verified</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+          }
+          .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: bounce 1s ease;
+          }
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+          }
+          h1 {
+            color: #27ae60;
+            margin-bottom: 10px;
+          }
+          p {
+            color: #666;
+            margin-bottom: 20px;
+          }
+          .countdown {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 20px;
+          }
+          .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+          }
+          .btn:hover {
+            background: #229954;
+          }
+        </style>
+        <script>
+          let countdown = 5;
+          setInterval(() => {
+            countdown--;
+            document.getElementById('countdown').textContent = countdown;
+            if (countdown <= 0) {
+              window.location.href = 'http://localhost:5174/login';
+            }
+          }, 1000);
+        </script>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">✅</div>
+          <h1>Email Verified Successfully!</h1>
+          <p>Your email has been verified. You can now login to your account.</p>
+          <p class="countdown">Redirecting to login in <span id="countdown">5</span> seconds...</p>
+          <a href="http://localhost:5174/login" class="btn">Go to Login Now</a>
+        </div>
+      </body>
+      </html>
+    `);
   } catch (error) {
     console.error("Error in GET /verify/:token:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Server Error</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+          }
+          .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+          }
+          h1 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+          }
+          p {
+            color: #666;
+            margin-bottom: 30px;
+          }
+          .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+          }
+          .btn:hover {
+            background: #5568d3;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">⚠️</div>
+          <h1>Server Error</h1>
+          <p>Something went wrong. Please try again later.</p>
+          <a href="http://localhost:5174/login" class="btn">Go to Login</a>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
@@ -150,16 +489,25 @@ router.post("/resend-verification", async (req, res) => {
     user.verifyTokenExpiry = tokenExpiration;
     await user.save();
 
-    const verificationUrl = `http://localhost:5000/api/user/verify/${token}`;
+    // Use environment variable for base URL, fallback to localhost for development
+    const baseUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' 
+      ? `https://${process.env.RENDER_SERVICE_NAME || 'yumify-backend'}.onrender.com`
+      : 'http://localhost:5000');
+    const verificationUrl = `${baseUrl}/api/user/verify/${token}`;
 
-    await sendEmail(
+    // Send response immediately, then send email asynchronously (non-blocking)
+    res.status(200).json({ 
+      message: "Verification email resent successfully. Please check your email." 
+    });
+    
+    // Send verification email asynchronously (don't block the response)
+    sendEmail(
       user.email,
       "Resend Email Verification",
       `Please verify your email by clicking here: ${verificationUrl}`
-    );
-
-    return res.status(200).json({ 
-      message: "Verification email resent successfully" 
+    ).catch((emailError) => {
+      // Log email error but don't fail the request
+      console.error("Failed to send verification email to", user.email, ":", emailError.message);
     });
 
   } catch (error) {
@@ -701,7 +1049,8 @@ router.get("/profile", protect, async (req, res) => {
 // route to add profile pic
 router.put("/addUserProfile", upload.single("profile"), async (req, res) => {
   try {
-    const imageUrl = req.file ? req.file.filename : null;
+    // Get image URL - works with both Cloudinary and local storage
+    const imageUrl = req.file ? (req.file.path || req.file.filename) : null;
     let token = verifyToken(req.cookies.token);
     console.log("sent profile:", imageUrl);
     const user = await User.findByIdAndUpdate(
@@ -826,11 +1175,21 @@ router.patch('/markAllAsRead', protect, async (req, res) => {
 
 // user logout route
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
+  // Cookie settings must match the login cookie settings
+  const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+    path: "/", // Must match the path used when setting the cookie
+  };
+  
+  if (process.env.NODE_ENV === "production") {
+    cookieOptions.secure = true;
+    cookieOptions.sameSite = "none";
+  } else {
+    cookieOptions.secure = false;
+    cookieOptions.sameSite = "lax";
+  }
+  
+  res.clearCookie("token", cookieOptions);
   res.status(200).json({ message: "Logout successful" });
 });
 

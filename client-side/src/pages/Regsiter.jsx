@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import Logo from "../components/logo";
+import Logo from "../components/Logo";
 import Button from "../components/Button";
 import SmartRestaurant from "../components/SmartRestaurant";
 import { Link } from "react-router-dom";
 import userAPI from "../apis/user.api";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 // prettier-ignore
@@ -29,17 +30,34 @@ userAPI.post('/register',{
     role:role
 }).then((res)=>{
   console.log("Registration successful:", res.data);
-  navigator('/emailVerfication');
+    // Show success toast with better message
+    toast.success("Registration successful! Please check your email to verify your account.", {
+      duration: 5000,
+      icon: '✅',
+    });
+    
+    // Clear form
+    setFullName("");
+    setRegEmail("");
+    setCreatePassword("");
+    setConfirmPassword("");
+    setRole('');
+    setTermsAccepted(false);
+    
+    // Redirect to login page after a short delay to show the toast
+    setTimeout(() => {
+      navigator('/login');
+    }, 1500);
 }).catch((err)=>{
+  // Show more detailed error message
+  const errorMessage = err.response?.data?.message || "Registration failed. Please try again.";
+  toast.error(errorMessage, {
+    duration: 4000,
+  });
   console.error("Registration failed:", err);
 });
 
-setFullName("");
-setRegEmail("");
-setCreatePassword("");
-setConfirmPassword("");
-setRole('');
-setTermsAccepted(false);
+
 
   }
   return (

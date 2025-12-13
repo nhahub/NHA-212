@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Logo from "../components/logo";
+import Logo from "../components/Logo";
 import Button from "../components/Button";
 import SmartRestaurant from "../components/SmartRestaurant";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,8 +18,15 @@ userAPI.post('/login',{
   email:logEmail,
     password:logPassword
 }).then((res)=>{
-  console.log("Login successful:");
-    const { role } = res.data;
+  console.log("Login successful:", res.data);
+    const { role, tokenGenerated } = res.data;
+    
+    // Store token in localStorage as fallback if cookies don't work
+    if (tokenGenerated) {
+      localStorage.setItem('authToken', tokenGenerated);
+      console.log("Token stored in localStorage");
+    }
+    
     // setUserRole(role);
     if (role === 'owner') {
       navigator('/owner/dashboard'); // Redirect to owner dashboard

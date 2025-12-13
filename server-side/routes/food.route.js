@@ -110,7 +110,8 @@ router.post("/add", upload.single('image'), async (req, res) => {
             console.log("No restaurant found for owner with ID:", token.id);
             return res.status(404).json({ message: "Restaurant not found for this owner" });
         }
-        const imageUrl = req.file ? req.file.filename : null;
+        // Get image URL - works with both Cloudinary and local storage
+        const imageUrl = req.file ? (req.file.path || req.file.filename) : null;
         console.log("Received new food data:", req.body, "Image file:", req.file);
         const newFood = new Food({
             name,

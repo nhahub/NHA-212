@@ -3,6 +3,7 @@ import userAPI from "../apis/user.api.js";
 import Food from "../components/Food.jsx";
 import { Link, useNavigate } from "react-router";
 import { Heart, Menu, ReceiptTextIcon } from "lucide-react";
+import { getImageUrl, UPLOADS_BASE_URL } from "../utils/config";
 
 const Favorites = () => {
   const [sideBarOpened, setSideBarOpened] = useState(false);
@@ -77,6 +78,7 @@ const Favorites = () => {
                 <span
                   onClick={() => {
                     userAPI.post("/logout").then(() => {
+                      localStorage.removeItem('authToken'); // Clear token from localStorage
                       navigator("/login");
                     });
                   }}
@@ -124,7 +126,7 @@ const Favorites = () => {
                   className="p-2 w-14 h-14 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#1a2a3a]"
                 >
                   <img
-                    src={`http://localhost:5000/uploads/users/${userData.imageUrl}`}
+                    src={getImageUrl(userData.imageUrl, 'users') || `${UPLOADS_BASE_URL}/users/def.svg`}
                     alt="Profile Pic"
                     className="rounded-full"
                   />
